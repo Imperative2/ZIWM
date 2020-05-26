@@ -24,6 +24,9 @@ def main():
     total_number_of_classes = 8
     total_number_of_features = 30
 
+    num_of_neighbours= [1,5,10]
+    type_of_metric = ["euclidean","manhattan"]
+
     #loading raw values from file
     datasetLoader = load_datasets.Load_datasets(path_to_dataset)
     dataset_raw_values = datasetLoader.loadDataset()
@@ -31,9 +34,13 @@ def main():
     #constructing main dataset with division for features and classes
     dataset = Dataset(dataset_raw_values)
 
+
+    best_fit = 0.0
+    best_average_fit = 0.0
+
     # selecting number of features and running tests
     for number_of_features_selected in range(1,25):
-        print(number_of_features_selected)
+        #print(number_of_features_selected)
         trimmed_feature_list = FeatureSelector.selectKBestFeatures(number_of_features_selected,
                                                                    dataset.dataset_features_array,
                                                                    dataset.dataset_class_array)
@@ -41,21 +48,64 @@ def main():
         patients=[]
         for i in range(len(dataset.dataset_class_array)):
             patient = Patient(i, dataset.dataset_class_array[i], trimmed_feature_list[i])
-            print(patient.getId(), patient.getDisease_class(), patient.get_features())
+           # print(patient.getId(), patient.getDisease_class(), patient.get_features())
             patients.append(patient)
 
+        #   testing for each metric type and number of neighbours
+        for metric in type_of_metric:
+            for n_neighbours in num_of_neighbours:
 
-        #   creating learn and test data sets
-        learning_set, testing_set = SplitSets.splitSets(patients)
+                test_result_arr = []
+                for i in range(5):
+                    print("metric: ",metric," n_neighbours", n_neighbours," run: ",i)
+                    #   creating learn and test data sets
+                    learning_set, testing_set = SplitSets.splitSets(patients)
+                    #   creating algorythm and training
+                    kn = KNearestNeighbour(n_neighbours, metric, learning_set, testing_set)
+                    kn.train()
+                    res1 = kn.test()
+                    #   swaping training and learning sets
+                    temp_set = learning_set
+                    learning_set = testing_set
+                    testing_set = temp_set
 
-        kn = KNearestNeighbour(5,"minkowski", learning_set, testing_set)
+                    kn.setTestSet(testing_set)
+                    kn.setTrainingSet(learning_set)
 
-        kn.train()
+                    #   training once again
+                    kn.train()
 
-        #   creating algorythm and training
+                    res2 = kn.test()
+
+                    print("test result 1: ",res1)
+                    print("test result 2: ", res2)
+
+                    test_result_arr.append(res1)
+                    test_result_arr.append(res2)
+
+                    if(res1 > best_fit):
+                        best_fit = res1
+                    if(res2 > best_fit):
+                        best_fit = res2
+
+
+                test_average = sum(test_result_arr)/len(test_result_arr)
+                print("average of tests: ",test_average)
+                if(test_average > best_average_fit):
+                    best_average_fit = test_average
+
+
+
+
+
+
+
+
         #   comparing results of test data set
         #   calculating hit rate
 
+    print("best fit: ",best_fit)
+    print("best fit average: ",best_average_fit)
 
 main()
 
