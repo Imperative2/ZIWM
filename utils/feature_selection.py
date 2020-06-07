@@ -15,9 +15,21 @@ class FeatureSelector:
         class_assignment = np.array(class_assignment)
         class_assignment = class_assignment.astype(float)
 
+        estimator = SVR(kernel="linear")
+        selectorRFE = RFE(estimator, num_of_features, step=1)
+        selected_features = selectorRFE.fit_transform(features_array, class_assignment)
 
-        selectorCHI = SelectKBest(chi2, k=num_of_features)
-        selected_features = selectorCHI.fit_transform(features_array, class_assignment)
+
+        # selectorCHI = SelectKBest(chi2, k=num_of_features)
+        # selected_features = selectorCHI.fit_transform(features_array, class_assignment)
+
+
+
+        print("first sel", selectorRFE)
+        print("RFE selector", len(selected_features[0]))
+        print("selected features", selectorRFE.ranking_)
+
+
 
 
         return selected_features

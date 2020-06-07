@@ -7,6 +7,7 @@ from model import Dataset
 from utils import FeatureSelector
 from model import Patient
 from utils import SplitSets
+from utils import FileWriter
 
 from algorithms import KNearestNeighbour
 
@@ -21,6 +22,7 @@ from sklearn.svm import SVR
 
 def main():
     path_to_dataset = "C:\\GIT\\ZIWM\\data.csv"
+    file_writer = FileWriter("")
     total_number_of_classes = 8
     total_number_of_features = 30
 
@@ -39,7 +41,7 @@ def main():
     best_average_fit = 0.0
 
     # selecting number of features and running tests
-    for number_of_features_selected in range(1,25):
+    for number_of_features_selected in range(1,31):
         #print(number_of_features_selected)
         trimmed_feature_list = FeatureSelector.selectKBestFeatures(number_of_features_selected,
                                                                    dataset.dataset_features_array,
@@ -91,14 +93,11 @@ def main():
 
                 test_average = sum(test_result_arr)/len(test_result_arr)
                 print("average of tests: ",test_average)
+
+                result_str = str(number_of_features_selected) +" | " + metric+" | "+str(n_neighbours)+" | "+str(test_average)+ " \n"
+                file_writer.write(result_str)
                 if(test_average > best_average_fit):
                     best_average_fit = test_average
-
-
-
-
-
-
 
 
         #   comparing results of test data set
@@ -106,6 +105,7 @@ def main():
 
     print("best fit: ",best_fit)
     print("best fit average: ",best_average_fit)
+    file_writer.close()
 
 main()
 
